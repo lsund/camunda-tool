@@ -14,4 +14,4 @@ TODO
 ## License
 
 Copyright © 2019 Ludvig Sundström
-Eclipse Public License 2.0 - Same as clojure. See [LICENCE][2]
+Distributed under the Eclipse Public License, the same as Clojure.
