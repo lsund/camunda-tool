@@ -1,5 +1,6 @@
 (ns camunda-tool.specs
   (:require [clojure.spec.alpha :as s]
+            [medley.core :refer [uuid]]
             [clojure.string :as string]))
 
 (s/def ::camunda-definition string?)
@@ -14,10 +15,15 @@
                                 (s/valid? ::camunda-definition
                                           (second %)))))
 
+(s/def ::vars-command #(and (= (count %) 2)
+                            (= (first %) "vars")
+                            (uuid? (uuid (second %)))))
+
 ;; An command list is always a collection of strings and is either a
 ;; 1. List command
 (s/def ::command-list (s/and (s/coll-of string?)
-                             (s/or :vec ::list-command)))
+                             (s/or :vec ::list-command
+                                   :vec ::vars-command)))
 
 (s/def ::protocol (s/or :string #(string/starts-with? % "http://")
                         :string #(string/starts-with? % "https://")))
