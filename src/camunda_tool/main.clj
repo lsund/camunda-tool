@@ -1,11 +1,9 @@
 (ns camunda-tool.main
-  (:require [clojure.tools.cli :as cli]
-            [camunda-tool.specs]
+  (:require [camunda-tool.handler :as handler]
+            camunda-tool.specs
             [clojure.spec.alpha :as s]
-            [clojure.pprint :refer [pprint]]
-            [cheshire.core :as cheshire]
             [clojure.string :as string]
-            [clj-http.client :as client]
+            [clojure.tools.cli :as cli]
             [slingshot.slingshot :refer [throw+]]))
 
 (def opt-spec
@@ -19,54 +17,6 @@
     "--list-format MODE"
     "List format mode. Has to be one of [ids, full]"]])
 
-(defn- const [x _]
-  x)
-
-(defmulti handle-command!
-  (comp keyword first const))
-
-(defn- filter-historic [historic? xs]
-  (if historic?
-    xs
-    (filter #(= (get % "state") "ACTIVE") xs)))
-
-(defn- filter-process-definition [definition xs]
-  (if-not definition
-    xs
-    (filter #(= (get % "processDefinitionName") definition) xs)))
-
-(defmethod handle-command! :list [[_ definition]
-                                  {:keys [api raw history list-format historic?]
-                                   :or {api "http://localhost:8080/engine-rest"
-                                        raw false
-                                        list-format :full
-                                        historic? false}
-                                   :as options}]
-  (let [json (->> "/history/process-instance"
-                  (str api)
-                  client/get
-                  :body)
-        print-fn (if (= list-format :ids)
-                   (comp pprint
-                         (fn [xs]
-                           (map #(get % "id") xs)))
-                   pprint)]
-    (if raw
-      json
-      (->> json
-           cheshire/parse-string
-           (filter-historic historic?)
-           (filter-process-definition definition)
-           (map #(select-keys % ["processDefinitionName"
-                                 "id"
-                                 "state"
-                                 "startTime"
-                                 "businessKey"]))
-           print-fn))))
-
-(defmethod handle-command! :hlist [commands options]
-  (handle-command! [:list] (assoc options :historic? true)))
-
 (defn- tweak [{:keys [list-format] :as options}]
   (update options :list-format keyword))
 
@@ -78,6 +28,6 @@
       (s/assert :camunda-tool.specs/command-list commands)
       (s/assert :camunda-tool.specs/options-map options)
       (if-not errors
-        (handle-command! commands (tweak options))
-        (throw+ {:type ::error-parsing-command-line}
+        (handler/process! commands (tweak options))
+        (throw+ {:type ::cli-parsing-error}
                 (string/join "\n" errors))))))
