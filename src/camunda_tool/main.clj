@@ -1,4 +1,5 @@
 (ns camunda-tool.main
+  (:import [org.apache.commons.validator.routines UrlValidator])
   (:require [clojure.tools.cli :as cli]
             [clojure.spec.alpha :as s]
             [clojure.pprint :refer [pprint]]
@@ -56,12 +57,6 @@
 (defn split-arguments [args]
   (split-with #(not= (first %) \-) args))
 
-(defn commands [args]
-  (first (split-arguments args)))
-
-(defn options [args]
-  (second (split-arguments args)))
-
 (s/def ::camunda-definition string?)
 
 ;; A List command is a command starting with `list` or `hlist` and
@@ -80,17 +75,19 @@
                              (s/or :vec ::list-command)))
 
 (s/def ::raw boolean?)
-(s/def ::api string?)
+(s/def ::api #(.isValid (UrlValidator.) %))
 (s/def ::format-list #(some #{%} ["ids" "full"]))
 
-(s/def ::options-map (s/keys :opt-un [::api ::raw ::format-list]))
+(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::raw ::format-list])
+                           :nil nil?))
 
 (defn -main [& args]
-  (s/assert ::command-list (commands args))
-  (s/assert ::options-map (options args))
-  (let [[commands unparsed-options] (split-arguments args)
-        {:keys [options errors]} (cli/parse-opts unparsed-options opt-spec)]
-    (if-not errors
-      (handle-command! commands options)
-      (throw+ {:type ::error-parsing-command-line}
-              (string/join "\n" errors)))))
+  (let [[commands unparsed-options] (split-arguments args)]
+    (let [{:keys [options errors]} (cli/parse-opts unparsed-options
+                                                   opt-spec)]
+      (s/assert ::command-list commands)
+      (s/assert ::options-map options)
+      (if-not errors
+        (handle-command! commands options)
+        (throw+ {:type ::error-parsing-command-line}
+                (string/join "\n" errors))))))
