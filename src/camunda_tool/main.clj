@@ -25,38 +25,47 @@
 (defmulti handle-command!
   (comp keyword first const))
 
-(defmethod handle-command! :list [_ {:keys [api raw history list-format]
-                                     :or {api "http://localhost:8080/engine-rest"
-                                          raw false
-                                          list-format :full
-                                          history false}}]
+(defn- historic-filter [historic? xs]
+  (if historic?
+    xs
+    (filter #(= (get % "state") "ACTIVE") xs)))
+
+(defn- process-definition-filter [definition xs]
+  (if-not definition
+    xs
+    (filter #(= (get % "processDefinitionName") definition) xs)))
+
+(defmethod handle-command! :list [[_ definition]
+                                  {:keys [api raw history list-format historic?]
+                                   :or {api "http://localhost:8080/engine-rest"
+                                        raw false
+                                        list-format :full
+                                        historic? false}
+                                   :as options}]
   (let [json (->> "/history/process-instance"
                   (str api)
                   client/get
                   :body)
-        filter-fn (if history
-                    identity
-                    (fn [xs]
-                      (filter #(= (get % "state") "ACTIVE") xs)))
         print-fn (if (= list-format :ids)
                    (comp pprint
                          (fn [xs]
                            (map #(get % "id") xs)))
                    pprint)]
-    (if-not raw
+    (if raw
+      json
       (->> json
            cheshire/parse-string
-           filter-fn
+           (historic-filter historic?)
+           (process-definition-filter definition)
            (map #(select-keys % ["processDefinitionName"
                                  "id"
                                  "state"
                                  "startTime"
                                  "businessKey"]))
-           print-fn)
-      json)))
+           print-fn))))
 
 (defmethod handle-command! :hlist [commands options]
-  (handle-command! [:list] (assoc options :history true)))
+  (handle-command! [:list] (assoc options :historic? true)))
 
 (defn- tweak [{:keys [list-format] :as options}]
   (update options :list-format keyword))
