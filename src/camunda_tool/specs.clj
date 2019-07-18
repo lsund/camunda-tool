@@ -24,7 +24,7 @@
 (s/def ::engine-rest (fn [[ _ x]] (re-find #"engine-rest" x)))
 (s/def ::raw boolean?)
 (s/def ::api (s/and ::protocol ::engine-rest))
-(s/def ::format-list #(some #{%} ["ids" "full"]))
+(s/def ::list-format #(some #{%} ["ids" "full"]))
 
-(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::raw ::format-list])
+(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::raw ::list-format])
                            :nil nil?))

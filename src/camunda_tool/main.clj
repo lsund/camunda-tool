@@ -16,7 +16,7 @@
     "--raw"
     "Raw JSON output?"]
    ["-f"
-    "--format-list MODE"
+    "--list-format MODE"
     "List format mode. Has to be one of [ids, full]"]])
 
 (defn- const [x _]
@@ -25,9 +25,10 @@
 (defmulti handle-command!
   (comp keyword first const))
 
-(defmethod handle-command! :list [_ {:keys [api raw history]
+(defmethod handle-command! :list [_ {:keys [api raw history list-format]
                                      :or {api "http://localhost:8080/engine-rest"
                                           raw false
+                                          list-format :full
                                           history false}}]
   (let [json (->> "/history/process-instance"
                   (str api)
@@ -36,9 +37,12 @@
         filter-fn (if history
                     identity
                     (fn [xs]
-                      (filter #(= (get % "state") "ACTIVE")
-                              xs)))
-        print-fn pprint]
+                      (filter #(= (get % "state") "ACTIVE") xs)))
+        print-fn (if (= list-format :ids)
+                   (comp pprint
+                         (fn [xs]
+                           (map #(get % "id") xs)))
+                   pprint)]
     (if-not raw
       (->> json
            cheshire/parse-string
@@ -54,6 +58,9 @@
 (defmethod handle-command! :hlist [commands options]
   (handle-command! [:list] (assoc options :history true)))
 
+(defn- tweak [{:keys [list-format] :as options}]
+  (update options :list-format keyword))
+
 (defn -main [& args]
   (let [[commands unparsed-options] (split-with #(not= (first %) \-) args)]
     (let [{:keys [options errors]} (cli/parse-opts unparsed-options
@@ -62,6 +69,6 @@
       (s/assert :camunda-tool.specs/command-list commands)
       (s/assert :camunda-tool.specs/options-map options)
       (if-not errors
-        (handle-command! commands options)
+        (handle-command! commands (tweak options))
         (throw+ {:type ::error-parsing-command-line}
                 (string/join "\n" errors))))))
