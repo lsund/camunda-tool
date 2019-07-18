@@ -25,12 +25,12 @@
 (defmulti handle-command!
   (comp keyword first const))
 
-(defn- historic-filter [historic? xs]
+(defn- filter-historic [historic? xs]
   (if historic?
     xs
     (filter #(= (get % "state") "ACTIVE") xs)))
 
-(defn- process-definition-filter [definition xs]
+(defn- filter-process-definition [definition xs]
   (if-not definition
     xs
     (filter #(= (get % "processDefinitionName") definition) xs)))
@@ -55,8 +55,8 @@
       json
       (->> json
            cheshire/parse-string
-           (historic-filter historic?)
-           (process-definition-filter definition)
+           (filter-historic historic?)
+           (filter-process-definition definition)
            (map #(select-keys % ["processDefinitionName"
                                  "id"
                                  "state"
