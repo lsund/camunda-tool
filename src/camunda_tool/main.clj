@@ -8,8 +8,15 @@
             [slingshot.slingshot :refer [throw+]]))
 
 (def opt-spec
-  [["-a" "--api API_ENDPOINT" "API endpoint to use"]
-   ["-r" "--raw" "Raw JSON output?"]])
+  [["-a"
+    "--api API_ENDPOINT"
+    "API endpoint to use"]
+   ["-r"
+    "--raw"
+    "Raw JSON output?"]
+   ["-f"
+    "--format-list MODE"
+    "List format mode. Has to be one of [simple, full]"]])
 
 (defn- const [x _]
   x)
@@ -29,7 +36,8 @@
                     identity
                     (fn [xs]
                       (filter #(= (get % "state") "ACTIVE")
-                              xs)))]
+                              xs)))
+        print-fn pprint]
     (if-not raw
       (->> json
            cheshire/parse-string
@@ -38,24 +46,42 @@
                                  "id"
                                  "state"
                                  "startTime"
-                                 "businessKey"]) )
-           pprint)
+                                 "businessKey"]))
+           print-fn)
       json)))
 
 (defmethod handle-command! :hlist [commands options]
   (handle-command! [:list] (assoc options :history true)))
 
+(defn split-arguments [args]
+  (split-with #(not= (first %) \-) args))
+
+(defn commands [args]
+  (first (split-arguments args)))
+
+(defn options [args]
+  (second (split-arguments args)))
+
 (s/def ::camunda-definition string?)
 
-(s/def ::arguments (s/and (s/coll-of string?)
-                          (s/or :vec #(and (= (first %) "list")
-                                           (s/conform ::camunda-definition
-                                                      (second %)))
-                                :vec #(= (first %) "hlist"))))
+;; A List command is a command starting with `list` or `hlist` and
+;; consists either one or two commands.  If two commands, the second
+;; is a string representing a camunda definition.
+(s/def ::list-command #(or (and (= (count (commands %)) 1)
+                                (some #{(first %)} ["list" "hlist"]))
+                           (and (= (count (commands %)) 2)
+                                (some #{(first %)} ["list" "hlist"])
+                                (s/valid? ::camunda-definition
+                                          (second %)))))
+
+;; An argument list is always a collection of strings and is either a
+;; 1. List command
+(s/def ::argument-list (s/and (s/coll-of string?)
+                              (s/or :vec ::list-command)))
 
 (defn -main [& args]
-  (s/assert ::arguments args)
-  (let [[commands unparsed-options] (split-with #(not= (first %) \-) args)
+  (s/assert ::argument-list args)
+  (let [[commands unparsed-options] (split-arguments args)
         {:keys [options errors]} (cli/parse-opts unparsed-options opt-spec)]
     (if-not errors
       (handle-command! commands options)
