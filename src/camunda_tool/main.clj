@@ -15,7 +15,7 @@
     "Raw JSON output?"]
    ["-f"
     "--list-format MODE"
-    "List format mode. Has to be one of [ids, full]"]])
+    "List format mode. Has to be one of ids | compact | full"]])
 
 (defn- tweak [{:keys [list-format] :as options}]
   (update options :list-format keyword))

@@ -14,10 +14,19 @@
     xs
     (filter #(= (get % "state") "ACTIVE") xs)))
 
-(defn- filter-process-definition [definition xs]
-  (if-not definition
+(defn- filter-process-definition [def xs]
+  (if-not def
     xs
-    (filter #(= (get % "processDefinitionName") definition) xs)))
+    (filter #(= (get % "processDefinitionName") def) xs)))
+
+(defn- print! [{:keys [list-format]} xs]
+  (pprint (case list-format
+            :ids (map #(get % "id") xs)
+            :compact (map (fn [x]
+                            (vals (select-keys x ["id"
+                                                  "processDefinitionName"])))
+                          xs)
+            xs)))
 
 (defmethod process! :list [[_ definition]
                            {:keys [api raw history list-format historic?]
@@ -29,12 +38,7 @@
   (let [json (->> "/history/process-instance"
                   (str api)
                   client/get
-                  :body)
-        print-fn (if (= list-format :ids)
-                   (comp pprint
-                         (fn [xs]
-                           (map #(get % "id") xs)))
-                   pprint)]
+                  :body)]
     (if raw
       json
       (->> json
@@ -46,7 +50,7 @@
                                  "state"
                                  "startTime"
                                  "businessKey"]))
-           print-fn))))
+           (print! options)))))
 
 (defmethod process! :hlist [commands options]
   (process! [:list] (assoc options :historic? true)))
