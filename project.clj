@@ -11,4 +11,8 @@
                  [slingshot "0.12.2"]
                  [cheshire "5.8.1"]]
   :main camunda-tool.main
-  :repl-options {:init-ns camunda-tool.main})
+  :pedantic :abort
+  :repl-options {:init-ns camunda-tool.main}
+  :aot [camunda-tool.main]
+  :profiles {:uberjar {:aot :all
+                       :uberjar-name "camunda-tool.jar"}})

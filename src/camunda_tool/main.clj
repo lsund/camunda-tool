@@ -1,4 +1,5 @@
 (ns camunda-tool.main
+  (:gen-class)
   (:require [camunda-tool.handler :as handler]
             camunda-tool.specs
             [clojure.spec.alpha :as s]
