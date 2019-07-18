@@ -1,6 +1,6 @@
 (ns camunda-tool.main
-  (:import [org.apache.commons.validator.routines UrlValidator])
   (:require [clojure.tools.cli :as cli]
+            [camunda-tool.specs]
             [clojure.spec.alpha :as s]
             [clojure.pprint :refer [pprint]]
             [cheshire.core :as cheshire]
@@ -54,39 +54,13 @@
 (defmethod handle-command! :hlist [commands options]
   (handle-command! [:list] (assoc options :history true)))
 
-(defn split-arguments [args]
-  (split-with #(not= (first %) \-) args))
-
-(s/def ::camunda-definition string?)
-
-;; A List command is a command starting with `list` or `hlist` and
-;; consists either one or two commands.  If two commands, the second
-;; is a string representing a camunda definition.
-(s/def ::list-command #(or (and (= (count %) 1)
-                                (some #{(first %)} ["list" "hlist"]))
-                           (and (= (count %) 2)
-                                (some #{(first %)} ["list" "hlist"])
-                                (s/valid? ::camunda-definition
-                                          (second %)))))
-
-;; An command list is always a collection of strings and is either a
-;; 1. List command
-(s/def ::command-list (s/and (s/coll-of string?)
-                             (s/or :vec ::list-command)))
-
-(s/def ::raw boolean?)
-(s/def ::api #(.isValid (UrlValidator.) %))
-(s/def ::format-list #(some #{%} ["ids" "full"]))
-
-(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::raw ::format-list])
-                           :nil nil?))
-
 (defn -main [& args]
-  (let [[commands unparsed-options] (split-arguments args)]
+  (let [[commands unparsed-options] (split-with #(not= (first %) \-) args)]
     (let [{:keys [options errors]} (cli/parse-opts unparsed-options
                                                    opt-spec)]
-      (s/assert ::command-list commands)
-      (s/assert ::options-map options)
+      (s/check-asserts true)
+      (s/assert :camunda-tool.specs/command-list commands)
+      (s/assert :camunda-tool.specs/options-map options)
       (if-not errors
         (handle-command! commands options)
         (throw+ {:type ::error-parsing-command-line}
