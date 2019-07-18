@@ -16,7 +16,7 @@
     "Raw JSON output?"]
    ["-f"
     "--format-list MODE"
-    "List format mode. Has to be one of [simple, full]"]])
+    "List format mode. Has to be one of [ids, full]"]])
 
 (defn- const [x _]
   x)
@@ -67,20 +67,27 @@
 ;; A List command is a command starting with `list` or `hlist` and
 ;; consists either one or two commands.  If two commands, the second
 ;; is a string representing a camunda definition.
-(s/def ::list-command #(or (and (= (count (commands %)) 1)
+(s/def ::list-command #(or (and (= (count %) 1)
                                 (some #{(first %)} ["list" "hlist"]))
-                           (and (= (count (commands %)) 2)
+                           (and (= (count %) 2)
                                 (some #{(first %)} ["list" "hlist"])
                                 (s/valid? ::camunda-definition
                                           (second %)))))
 
-;; An argument list is always a collection of strings and is either a
+;; An command list is always a collection of strings and is either a
 ;; 1. List command
-(s/def ::argument-list (s/and (s/coll-of string?)
-                              (s/or :vec ::list-command)))
+(s/def ::command-list (s/and (s/coll-of string?)
+                             (s/or :vec ::list-command)))
+
+(s/def ::raw boolean?)
+(s/def ::api string?)
+(s/def ::format-list #(some #{%} ["ids" "full"]))
+
+(s/def ::options-map (s/keys :opt-un [::api ::raw ::format-list]))
 
 (defn -main [& args]
-  (s/assert ::argument-list args)
+  (s/assert ::command-list (commands args))
+  (s/assert ::options-map (options args))
   (let [[commands unparsed-options] (split-arguments args)
         {:keys [options errors]} (cli/parse-opts unparsed-options opt-spec)]
     (if-not errors
