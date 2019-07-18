@@ -1,11 +1,14 @@
 [1]: https://docs.camunda.org/manual/7.10/
 [2]: LICENSE
+[3]: https//lambdawerk.com/home
 
 # camunda-tool
 
 A wrapper around the [Camunda REST API][1] for interacting with Camunda BPM from
 the command line. Designed to give easy and fast access to the data and
-functions of camunda
+functions of camunda.
+
+Camunda Tool is sponsored by [LambdaWerk][3]
 
 ## Usage
 
