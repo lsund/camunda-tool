@@ -1,7 +1,7 @@
 (ns camunda-tool.main
   (:gen-class)
   (:require [camunda-tool.handler :as handler]
-            [camunda-tool.format :refer [json]]
+            [camunda-tool.format :refer [json->list]]
             camunda-tool.specs
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
@@ -27,14 +27,14 @@
 (defn -main [& args]
   (let [[commands unparsed-options] (split-with #(not= (first %) \-) args)]
     (let [{:keys [options errors]} (cli/parse-opts unparsed-options
-                                                   opt-spec)]
+                                                   opt-spec)
+          options (-> options
+                      merge-defaults
+                      keywordize)]
       (s/check-asserts true)
       (s/assert :camunda-tool.specs/command-list commands)
       (s/assert :camunda-tool.specs/options-map options)
       (if-not errors
-        (format/json options
-                     (handler/request! commands (-> options
-                                                    merge-defaults
-                                                    keywordize)))
+        (json->list options (handler/request! commands options))
         (throw+ {:type ::cli-parsing-error}
                 (string/join "\n" errors))))))
