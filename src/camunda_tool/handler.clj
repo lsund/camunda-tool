@@ -7,7 +7,7 @@
 (defn- const [x _]
   x)
 
-(defmulti process!
+(defmulti request!
   (comp keyword first const))
 
 (defn- filter-historic [historic? xs]
@@ -33,12 +33,8 @@
 (defn flip [f x y]
   (f y x))
 
-(defmethod process! :list [[_ definition]
+(defmethod request! :list [[_ definition]
                            {:keys [api raw history list-format historic?]
-                            :or {api "http://localhost:8080/engine-rest"
-                                 raw false
-                                 list-format :full
-                                 historic? false}
                             :as options}]
   (let [json (->> "/history/process-instance"
                   (str api)
@@ -51,13 +47,12 @@
            (filter-historic historic?)
            (filter-process-definition definition)
            (map #(select-keys % (gen-keys list-format)))
-           (flip cheshire/generate-string {:pretty true})
-           println))))
+           (flip cheshire/generate-string {:pretty true})))))
 
-(defmethod process! :hlist [commands options]
-  (process! [:list] (assoc options :historic? true)))
+(defmethod request! :hlist [commands options]
+  (request! [:list] (assoc options :historic? true)))
 
-(defmethod process! :vars [[_ id]
+(defmethod request! :vars [[_ id]
                            {:keys [api raw]
                             :or {api "http://localhost:8080/engine-rest"
                                  raw false}}]
@@ -70,4 +65,16 @@
       (->> json
            cheshire/parse-string
            (map-kv (fn [k v] [k (get v "value")]))
-           pprint))))
+           (flip cheshire/generate-string {:pretty true})))))
+
+(defmethod request! :start [[_ definition-key] {:keys [api raw] :as options}]
+  (let [json (->> (str "/process-definition/key/" definition-key "/start")
+                  (str api)
+                  client/get
+                  :body)]
+    (if raw
+      json
+      (->> json
+           cheshire/parse-string
+           (map-kv (fn [k v] [k (get v "value")]))
+           (flip cheshire/generate-string {:pretty true})))))

@@ -18,8 +18,14 @@
     "--list-format MODE"
     "List format mode. Has to be one of ids | compact | full"]])
 
-(defn- tweak [{:keys [list-format] :as options}]
+(defn- keywordize [{:keys [list-format] :as options}]
   (update options :list-format keyword))
+
+(defn- merge-defaults [options]
+  (merge {:api "http://localhost:8080/engine-rest"
+          :raw false
+          :list-format :full
+          :historic? false} options))
 
 (defn -main [& args]
   (let [[commands unparsed-options] (split-with #(not= (first %) \-) args)]
@@ -29,6 +35,8 @@
       (s/assert :camunda-tool.specs/command-list commands)
       (s/assert :camunda-tool.specs/options-map options)
       (if-not errors
-        (handler/process! commands (tweak options))
+        (println (handler/request! commands (-> options
+                                                merge-defaults
+                                                keywordize )))
         (throw+ {:type ::cli-parsing-error}
                 (string/join "\n" errors))))))
