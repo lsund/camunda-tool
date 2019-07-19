@@ -1,0 +1,3 @@
+#!/bin/bash
+
+camunda-tool list | jq 'map(select(.processDefinitionName == "Invoice Receipt"))'
