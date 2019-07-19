@@ -27,7 +27,8 @@
 ;; 1. List command
 (s/def ::command-list (s/and (s/coll-of string?)
                              (s/or :vec ::list-command
-                                   :vec ::vars-command)))
+                                   :vec ::vars-command
+                                   :vec ::start-command)))
 
 ;; A List command is a command starting with `list` or `hlist` and
 ;; consists either one or two commands.  If two commands, the second
@@ -44,3 +45,8 @@
 (s/def ::vars-command #(and (= (count %) 2)
                             (= (first %) "vars")
                             (uuid? (uuid (second %)))))
+
+(s/def ::start-command #(and (>= (count %) 2)
+                             (even? (count %))
+                             (= (first %) "start")
+                             (string? (second %))))

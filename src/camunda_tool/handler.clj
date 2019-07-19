@@ -1,6 +1,6 @@
 (ns camunda-tool.handler
   (:require [cheshire.core :as cheshire]
-            [medley.core :refer [map-kv]]
+            [medley.core :refer [map-kv map-vals map-keys]]
             [clj-http.client :as client]
             [clojure.pprint :refer [pprint]]))
 
@@ -25,6 +25,7 @@
     :ids ["id"]
     :compact ["id" "processDefinitionName"]
     ["processDefinitionName"
+     "processDefinitionKey"
      "id"
      "state"
      "startTime"
@@ -33,6 +34,14 @@
 (defn flip [f x y]
   (f y x))
 
+(defn- process-json [raw json f]
+  (if raw
+    json
+    (-> json
+        cheshire/parse-string
+        f
+        (cheshire/generate-string {:pretty true}))))
+
 (defmethod request! :list [[_ definition]
                            {:keys [api raw history list-format historic?]
                             :as options}]
@@ -40,14 +49,13 @@
                   (str api)
                   client/get
                   :body)]
-    (if raw
-      json
-      (->> json
-           cheshire/parse-string
-           (filter-historic historic?)
-           (filter-process-definition definition)
-           (map #(select-keys % (gen-keys list-format)))
-           (flip cheshire/generate-string {:pretty true})))))
+    (process-json raw
+                  json
+                  (comp
+                   (fn [xs]
+                     (map #(select-keys % (gen-keys list-format)) xs))
+                   #(filter-process-definition definition %)
+                   #(filter-historic historic? %)))))
 
 (defmethod request! :hlist [commands options]
   (request! [:list] (assoc options :historic? true)))
@@ -60,21 +68,23 @@
                   (str api)
                   client/get
                   :body)]
-    (if raw
-      json
-      (->> json
-           cheshire/parse-string
-           (map-kv (fn [k v] [k (get v "value")]))
-           (flip cheshire/generate-string {:pretty true})))))
+    (process-json raw json (fn [xs] (map-vals #(get % "value") xs)))))
 
-(defmethod request! :start [[_ definition-key] {:keys [api raw] :as options}]
+(defn- cli->camunda-variables [args]
+  (->> args
+       (apply hash-map)
+       (map-keys keyword)
+       (map-kv (fn [k v] [(name k) {"value" (str v)
+                                    "type" "String"}]))))
+
+(defmethod request! :start [[_ definition-key & args]
+                            {:keys [api raw] :as options}]
+
   (let [json (->> (str "/process-definition/key/" definition-key "/start")
                   (str api)
-                  client/get
+                  (flip client/post
+                        {:form-params
+                         {:variables (cli->camunda-variables args)}
+                         :content-type :json})
                   :body)]
-    (if raw
-      json
-      (->> json
-           cheshire/parse-string
-           (map-kv (fn [k v] [k (get v "value")]))
-           (flip cheshire/generate-string {:pretty true})))))
+    (process-json raw json #(select-keys % ["id"]))))
