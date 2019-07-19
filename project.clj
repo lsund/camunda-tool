@@ -13,6 +13,5 @@
   :main camunda-tool.main
   :pedantic :abort
   :repl-options {:init-ns camunda-tool.main}
-  :aot [camunda-tool.main]
   :profiles {:uberjar {:aot :all
                        :uberjar-name "camunda-tool.jar"}})
