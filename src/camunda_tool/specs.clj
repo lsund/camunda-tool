@@ -43,7 +43,7 @@
 (s/def ::camunda-definition string?)
 
 (s/def ::vars-command #(and (= (count %) 2)
-                            (= (first %) "vars")
+                            (some #{(first %)} ["vars" "delete"])
                             (uuid? (uuid (second %)))))
 
 (s/def ::start-command #(and (>= (count %) 2)

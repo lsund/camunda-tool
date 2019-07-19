@@ -2,10 +2,14 @@
   (:require [cheshire.core :as cheshire]
             [medley.core :refer [map-kv map-vals map-keys]]
             [clj-http.client :as client]
-            [clojure.pprint :refer [pprint]]))
+            [clojure.pprint :refer [pprint]]
+            [slingshot.slingshot :refer [try+]]))
 
 (defn- const [x _]
   x)
+
+(defn flip [f x y]
+  (f y x))
 
 (defmulti request!
   (comp keyword first const))
@@ -18,7 +22,7 @@
 (defn- filter-process-definition [def xs]
   (if-not def
     xs
-    (filter #(= (get % "processDefinitionName") def) xs)))
+    (filter #(= (get % "processDefinitionKey") def) xs)))
 
 (defn gen-keys [list-format]
   (case list-format
@@ -31,13 +35,10 @@
      "startTime"
      "businessKey"]))
 
-(defn flip [f x y]
-  (f y x))
-
-(defn- process-json [raw json f]
+(defn- process-json [raw data f]
   (if raw
-    json
-    (-> json
+    data
+    (-> data
         cheshire/parse-string
         f
         (cheshire/generate-string {:pretty true}))))
@@ -45,12 +46,12 @@
 (defmethod request! :list [[_ definition]
                            {:keys [api raw history list-format historic?]
                             :as options}]
-  (let [json (->> "/history/process-instance"
+  (let [resp (->> "/history/process-instance"
                   (str api)
                   client/get
                   :body)]
     (process-json raw
-                  json
+                  resp
                   (comp
                    (fn [xs]
                      (map #(select-keys % (gen-keys list-format)) xs))
@@ -64,11 +65,11 @@
                            {:keys [api raw]
                             :or {api "http://localhost:8080/engine-rest"
                                  raw false}}]
-  (let [json (->> (str "/process-instance/" id "/variables")
+  (let [resp (->> (str "/process-instance/" id "/variables")
                   (str api)
                   client/get
                   :body)]
-    (process-json raw json (fn [xs] (map-vals #(get % "value") xs)))))
+    (process-json raw resp (fn [xs] (map-vals #(get % "value") xs)))))
 
 (defn- cli->camunda-variables [args]
   (->> args
@@ -80,11 +81,23 @@
 (defmethod request! :start [[_ definition-key & args]
                             {:keys [api raw] :as options}]
 
-  (let [json (->> (str "/process-definition/key/" definition-key "/start")
+  (let [resp (->> (str "/process-definition/key/" definition-key "/start")
                   (str api)
                   (flip client/post
-                        {:form-params
-                         {:variables (cli->camunda-variables args)}
+                        {:form-params {:variables (cli->camunda-variables args)}
                          :content-type :json})
                   :body)]
-    (process-json raw json #(select-keys % ["id"]))))
+    (process-json raw resp #(select-keys % ["id"]))))
+
+(defmethod request! :delete [[_ id] {:keys [api]}]
+  (try+
+   (->> (str "/process-instance/" id)
+        (str api)
+        client/delete
+        :status)
+   (cheshire/generate-string {:id id
+                              :deleted true})
+   (catch [:status 404] {}
+     (cheshire/generate-string {:id id
+                                :deleted false
+                                :msg "No process instance with that ID exists"}))))
