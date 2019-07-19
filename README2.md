@@ -1,83 +1,99 @@
-camunda-tool {#camunda-tool align="center"}
+camunda-tool
 ============
 
-[NAME](#NAME)\
-[SYNOPSIS](#SYNOPSIS)\
-[DESCRIPTION](#DESCRIPTION)\
-[COMMANDS](#COMMANDS)\
-[OPTIONS](#OPTIONS)\
-[BUGS](#BUGS)\
-[AUTHOR](#AUTHOR)\
+[NAME](#NAME)  
+[SYNOPSIS](#SYNOPSIS)  
+[DESCRIPTION](#DESCRIPTION)  
+[COMMANDS](#COMMANDS)  
+[OPTIONS](#OPTIONS)  
+[BUGS](#BUGS)  
+[AUTHOR](#AUTHOR)  
 
 ------------------------------------------------------------------------
 
-NAME []{#NAME}
---------------
+NAME <span id="NAME"></span>
+----------------------------
 
 camunda-tool − useful wrapper around the Camunda REST API
 
-SYNOPSIS []{#SYNOPSIS}
-----------------------
+SYNOPSIS <span id="SYNOPSIS"></span>
+------------------------------------
 
 **camunda-tool COMMANDS OPTIONS**
 
-DESCRIPTION []{#DESCRIPTION}
-----------------------------
+DESCRIPTION <span id="DESCRIPTION"></span>
+------------------------------------------
 
 **camunda-tool** is a wrapper around the Camunda REST API for
 interacting with Camunda BPM from the command line. Designed to give
 easy and fast access to the core functionality you need to develop and
 monitor camunda processes.
 
-COMMANDS []{#COMMANDS}
-----------------------
+COMMANDS <span id="COMMANDS"></span>
+------------------------------------
 
 COMMANDS is a list of tokens for commanding camunda tool
 
 Valid COMMANDS are:
 
-  -- ------ -- ----------------------------------------------- --
-     list      lists all currently running process instances   
-  -- ------ -- ----------------------------------------------- --
+<table>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><p>list</p></td>
+<td></td>
+<td><p>lists all currently running process instances</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 
-list \<definition\>
+list &lt;definition&gt;
 
 lists all currently running process instances of the given definition
 
-  -- ------- -- ----------------------------- --
-     hlist      lists all process instances   
-  -- ------- -- ----------------------------- --
+<table>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><p>hlist</p></td>
+<td></td>
+<td><p>lists all process instances</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 
-hlist \<definition-key\>
+hlist &lt;definition-key&gt;
 
 lists all process instances of the given definition
 
-vars \<process-id\>
+vars &lt;process-id&gt;
 
 list the variables of the given process ID.
 
-start \<definition-key\> \<variables\>
+start &lt;definition-key&gt; &lt;variables&gt;
 
 starts an instance of the latest process definition with the given
 definition key given start variables.
 
-monitor \<process-id\>\
-input-vars \<definition-key\>
+monitor &lt;process-id&gt;  
+input-vars &lt;definition-key&gt;
 
-OPTIONS []{#OPTIONS}
---------------------
+OPTIONS <span id="OPTIONS"></span>
+----------------------------------
 
 The nuseradd does not take any options. However, you can supply
 username.
 
-BUGS []{#BUGS}
---------------
+BUGS <span id="BUGS"></span>
+----------------------------
 
 No known bugs.
 
-AUTHOR []{#AUTHOR}
-------------------
+AUTHOR <span id="AUTHOR"></span>
+--------------------------------
 
-Ludvig SundstrÃ¶m (lud.sund\@gmail.com)
+Ludvig SundstrÃ¶m (lud.sund@gmail.com)
 
 ------------------------------------------------------------------------
