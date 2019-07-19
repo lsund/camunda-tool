@@ -1,7 +1,7 @@
 (ns camunda-tool.main
   (:gen-class)
   (:require [camunda-tool.handler :as handler]
-            [camunda-tool.format :refer [json->list]]
+            [camunda-tool.format :refer [pprint-json]]
             camunda-tool.specs
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
@@ -35,6 +35,6 @@
       (s/assert :camunda-tool.specs/command-list commands)
       (s/assert :camunda-tool.specs/options-map options)
       (if-not errors
-        (json->list options (handler/request! commands options))
+        (pprint-json commands options (handler/request! commands options))
         (throw+ {:type ::cli-parsing-error}
                 (string/join "\n" errors))))))
