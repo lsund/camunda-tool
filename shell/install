@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# lein clean
+# lein uberjar
+mkdir -p $HOME/.local/{lib,bin}
+cp ./target/camunda-tool.jar $HOME/.local/lib
+cp $(dirname $0)/camunda-tool $HOME/.local/bin

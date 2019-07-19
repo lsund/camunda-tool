@@ -1,0 +1,6 @@
+#!/bin/bash
+
+id=$(camunda-tool list | \
+        jq '.[0]."id"' | \
+        sed "s/^\([\"']\)\(.*\)\1\$/\2/g")
+camunda-tool vars $id

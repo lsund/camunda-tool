@@ -20,14 +20,18 @@
     xs
     (filter #(= (get % "processDefinitionName") def) xs)))
 
-(defn- print! [{:keys [list-format]} xs]
-  (pprint (case list-format
-            :ids (map #(get % "id") xs)
-            :compact (map (fn [x]
-                            (vals (select-keys x ["id"
-                                                  "processDefinitionName"])))
-                          xs)
-            xs)))
+(defn gen-keys [list-format]
+  (case list-format
+    :ids ["id"]
+    :compact ["id" "processDefinitionName"]
+    ["processDefinitionName"
+     "id"
+     "state"
+     "startTime"
+     "businessKey"]))
+
+(defn flip [f x y]
+  (f y x))
 
 (defmethod process! :list [[_ definition]
                            {:keys [api raw history list-format historic?]
@@ -46,12 +50,9 @@
            cheshire/parse-string
            (filter-historic historic?)
            (filter-process-definition definition)
-           (map #(select-keys % ["processDefinitionName"
-                                 "id"
-                                 "state"
-                                 "startTime"
-                                 "businessKey"]))
-           (print! options)))))
+           (map #(select-keys % (gen-keys list-format)))
+           (flip cheshire/generate-string {:pretty true})
+           println))))
 
 (defmethod process! :hlist [commands options]
   (process! [:list] (assoc options :historic? true)))
