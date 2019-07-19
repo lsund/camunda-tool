@@ -24,17 +24,6 @@
     xs
     (filter #(= (get % "processDefinitionKey") def) xs)))
 
-(defn gen-keys [list-format]
-  (case list-format
-    :ids ["id"]
-    :compact ["id" "processDefinitionName"]
-    ["processDefinitionName"
-     "processDefinitionKey"
-     "id"
-     "state"
-     "startTime"
-     "businessKey"]))
-
 (defn- process-json [raw data f]
   (if raw
     data
@@ -54,7 +43,12 @@
                   resp
                   (comp
                    (fn [xs]
-                     (map #(select-keys % (gen-keys list-format)) xs))
+                     (map #(select-keys % ["processDefinitionName"
+                                           "processDefinitionKey"
+                                           "id"
+                                           "state"
+                                           "startTime"
+                                           "businessKey"]) xs))
                    #(filter-process-definition definition %)
                    #(filter-historic historic? %)))))
 

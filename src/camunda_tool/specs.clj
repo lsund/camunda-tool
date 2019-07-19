@@ -18,7 +18,7 @@
 
 (s/def ::engine-rest (fn [[ _ x]] (re-find #"engine-rest" x)))
 
-(s/def ::list-format #(some #{%} ["ids" "compact" "full"]))
+(s/def ::list-format boolean?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Commands

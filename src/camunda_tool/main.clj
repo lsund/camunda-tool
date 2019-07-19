@@ -15,16 +15,13 @@
     "--raw"
     "Raw JSON output?"]
    ["-f"
-    "--list-format MODE"
-    "List format mode. Has to be one of ids | compact | full"]])
-
-(defn- keywordize [{:keys [list-format] :as options}]
-  (update options :list-format keyword))
+    "--list-format"
+    "List format mode. If false, return JSON"]])
 
 (defn- merge-defaults [options]
   (merge {:api "http://localhost:8080/engine-rest"
           :raw false
-          :list-format :full
+          :list-format false
           :historic? false} options))
 
 (defn -main [& args]
@@ -35,8 +32,6 @@
       (s/assert :camunda-tool.specs/command-list commands)
       (s/assert :camunda-tool.specs/options-map options)
       (if-not errors
-        (println (handler/request! commands (-> options
-                                                merge-defaults
-                                                keywordize )))
+        (println (handler/request! commands (-> options merge-defaults)))
         (throw+ {:type ::cli-parsing-error}
                 (string/join "\n" errors))))))
