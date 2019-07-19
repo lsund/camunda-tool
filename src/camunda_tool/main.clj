@@ -1,6 +1,7 @@
 (ns camunda-tool.main
   (:gen-class)
   (:require [camunda-tool.handler :as handler]
+            [camunda-tool.format :refer [json]]
             camunda-tool.specs
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
@@ -11,18 +12,17 @@
   [["-a"
     "--api API_ENDPOINT"
     "API endpoint to use"]
-   ["-r"
-    "--raw"
-    "Raw JSON output?"]
-   ["-f"
-    "--list-format"
-    "List format mode. If false, return JSON"]])
+   ["-o"
+    "--output OUTPUT_TYPE"
+    "Output type. Can be one of json | camunda-json | list"]])
 
 (defn- merge-defaults [options]
   (merge {:api "http://localhost:8080/engine-rest"
-          :raw false
-          :list-format false
+          :output :json
           :historic? false} options))
+
+(defn- keywordize [options]
+  (update options :output keyword))
 
 (defn -main [& args]
   (let [[commands unparsed-options] (split-with #(not= (first %) \-) args)]
@@ -32,6 +32,9 @@
       (s/assert :camunda-tool.specs/command-list commands)
       (s/assert :camunda-tool.specs/options-map options)
       (if-not errors
-        (println (handler/request! commands (-> options merge-defaults)))
+        (format/json options
+                     (handler/request! commands (-> options
+                                                    merge-defaults
+                                                    keywordize)))
         (throw+ {:type ::cli-parsing-error}
                 (string/join "\n" errors))))))

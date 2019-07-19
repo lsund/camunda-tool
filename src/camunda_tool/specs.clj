@@ -6,10 +6,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Options
 
-(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::raw ::list-format])
+(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::output ::list-format])
                            :nil nil?))
 
-(s/def ::raw boolean?)
+(s/def ::output #(some #{%} ["json" "camunda-json" "list"]))
 
 (s/def ::api (s/and ::protocol ::engine-rest))
 

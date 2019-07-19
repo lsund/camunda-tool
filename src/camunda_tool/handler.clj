@@ -14,7 +14,7 @@
 (defmulti request!
   (comp keyword first const))
 
-(defn- filter-historic [historic? xs]
+(defn- filter-historic [xs {:keys [historic?]}]
   (if historic?
     xs
     (filter #(= (get % "state") "ACTIVE") xs)))
@@ -24,22 +24,23 @@
     xs
     (filter #(= (get % "processDefinitionKey") def) xs)))
 
-(defn- process-json [raw data f]
-  (if raw
-    data
+(defn- process-json [{:keys [output] :as options} data process-fn raw-process-fn]
+  (let [f (if (= output :camunda-json)
+            raw-process-fn
+            process-fn)]
     (-> data
         cheshire/parse-string
         f
         (cheshire/generate-string {:pretty true}))))
 
 (defmethod request! :list [[_ definition]
-                           {:keys [api raw history list-format historic?]
+                           {:keys [api output history list-format historic?]
                             :as options}]
   (let [resp (->> "/history/process-instance"
                   (str api)
                   client/get
                   :body)]
-    (process-json raw
+    (process-json options
                   resp
                   (comp
                    (fn [xs]
@@ -50,20 +51,22 @@
                                            "startTime"
                                            "businessKey"]) xs))
                    #(filter-process-definition definition %)
-                   #(filter-historic historic? %)))))
+                   #(filter-historic % options))
+                  #(filter-historic % options))))
 
 (defmethod request! :hlist [commands options]
   (request! [:list] (assoc options :historic? true)))
 
 (defmethod request! :vars [[_ id]
-                           {:keys [api raw]
-                            :or {api "http://localhost:8080/engine-rest"
-                                 raw false}}]
+                           {:keys [api output] :as options}]
   (let [resp (->> (str "/process-instance/" id "/variables")
                   (str api)
                   client/get
                   :body)]
-    (process-json raw resp (fn [xs] (map-vals #(get % "value") xs)))))
+    (process-json options
+                  resp
+                  (fn [xs] (map-vals #(get % "value") xs))
+                  identity)))
 
 (defn- cli->camunda-variables [args]
   (->> args
@@ -73,7 +76,7 @@
                                     "type" "String"}]))))
 
 (defmethod request! :start [[_ definition-key & args]
-                            {:keys [api raw] :as options}]
+                            {:keys [api output] :as options}]
 
   (let [resp (->> (str "/process-definition/key/" definition-key "/start")
                   (str api)
@@ -81,7 +84,7 @@
                         {:form-params {:variables (cli->camunda-variables args)}
                          :content-type :json})
                   :body)]
-    (process-json raw resp #(select-keys % ["id"]))))
+    (process-json options resp #(select-keys % ["id"]) identity)))
 
 (defmethod request! :delete [[_ id] {:keys [api]}]
   (try+
