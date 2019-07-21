@@ -1,15 +1,10 @@
 (ns camunda-tool.handler
   (:require [cheshire.core :as cheshire]
+            [me.lsund.util :refer [const flip]]
             [medley.core :refer [map-kv map-vals map-keys]]
             [clj-http.client :as client]
             [clojure.pprint :refer [pprint]]
             [slingshot.slingshot :refer [try+]]))
-
-(defn- const [x _]
-  x)
-
-(defn flip [f x y]
-  (f y x))
 
 (defmulti request!
   (comp keyword first const))
