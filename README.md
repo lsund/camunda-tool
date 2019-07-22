@@ -9,7 +9,7 @@ $ ./shell/install
 $ $HOME/.local/bin/camunda-tool list
 ```
 
-Please see [The manpage](man/camunda-tool.1) usage:
+For usage, please see [the manpage](man/camunda-tool.1).
 ```
 $ man ./man/camunda-tool.1
 ```
