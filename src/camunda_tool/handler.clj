@@ -67,15 +67,36 @@
        (map-kv (fn [k v] [(name k) {"value" (str v)
                                     "type" "String"}]))))
 
-(defmethod request! :start [[_ definition-key & args] {:keys [api] :as options}]
+(defn- current-external-tasks-for [id {:keys [api]}]
+  (->> (str api "/external-task")
+       (flip client/get {:accept :json :query-params {:processInstanceId id}})
+       :body
+       cheshire/parse-string
+       (map #(select-keys % ["workerId" "errorMessage" "activityId"]))))
 
+(defmethod request! :start [[_ definition-key & args] {:keys [api monitor] :as options}]
   (let [resp (->> (str "/process-definition/key/" definition-key "/start")
                   (str api)
                   (flip client/post
                         {:form-params {:variables (cli->camunda-variables args)}
                          :content-type :json})
                   :body)]
-    (process-json options resp #(select-keys % ["id"]) identity)))
+    ;; TODO should pprint the start message before monitoring finishes
+    (let [out (process-json options resp #(select-keys % ["id"]) identity)
+          id (-> (get (cheshire/parse-string out) "id"))
+          errors (atom nil)]
+      (when monitor
+        (do
+          (while (not @errors)
+            (let [tasks (current-external-tasks-for id options)]
+              (reset! errors (some #(get % "errorMessage") tasks))
+              (println "Executing activity: " (map #(get % "activityId") tasks))
+              (Thread/sleep 2000)))
+          (if @errors
+            (println (str "Process instance failed with: " @errors))
+            (println "Process instance ended normally"))
+          out)
+        out))))
 
 (defmethod request! :delete [[_ id] {:keys [api]}]
   (try+

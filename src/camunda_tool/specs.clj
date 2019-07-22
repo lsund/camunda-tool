@@ -6,7 +6,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Options
 
-(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::human-readable ::pretty ::no-filter])
+(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::human-readable ::pretty ::no-filter ::monitor])
                            :nil nil?))
 
 (s/def ::human-readable boolean?)
@@ -14,6 +14,8 @@
 (s/def ::pretty boolean?)
 
 (s/def ::no-filter boolean?)
+
+(s/def ::monitor boolean?)
 
 (s/def ::api (s/and ::protocol ::engine-rest))
 

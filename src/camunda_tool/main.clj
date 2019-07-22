@@ -17,10 +17,13 @@
     "Return the original camunda json response"]
    ["-p"
     "--pretty"
-    "Pretty print output"]
+    "Pretty print output. Only effective if -h is not set."]
    ["-h"
     "--human-readable"
-    "Output a human-readable readable list instead of JSON"]])
+    "Output a human-readable readable list instead of JSON"]
+   ["-m"
+    "--monitor"
+    "Monitor started process. Only effective with the `start` command"]])
 
 (defn- merge-defaults [options]
   (merge {:api "http://localhost:8080/engine-rest"
