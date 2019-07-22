@@ -6,10 +6,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Options
 
-(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::list-view ::pretty ::no-filter])
+(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::human-readable ::pretty ::no-filter])
                            :nil nil?))
 
-(s/def ::list-view boolean?)
+(s/def ::human-readable boolean?)
 
 (s/def ::pretty boolean?)
 

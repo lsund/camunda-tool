@@ -18,9 +18,9 @@
    ["-p"
     "--pretty"
     "Pretty print output"]
-   ["-l"
-    "--list-view"
-    "Output a human readable list instead of JSON"]])
+   ["-h"
+    "--human-readable"
+    "Output a human-readable readable list instead of JSON"]])
 
 (defn- merge-defaults [options]
   (merge {:api "http://localhost:8080/engine-rest"
