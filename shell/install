@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# lein clean
-# lein uberjar
+lein clean
+lein uberjar
+echo "mkdir -p $HOME/.local/{lib,bin}"
 mkdir -p $HOME/.local/{lib,bin}
+echo "cp ./target/camunda-tool.jar $HOME/.local/lib"
 cp ./target/camunda-tool.jar $HOME/.local/lib
+echo "cp $(dirname $0)/camunda-tool $HOME/.local/bin"
 cp $(dirname $0)/camunda-tool $HOME/.local/bin

@@ -9,7 +9,7 @@
 (s/def ::options-map (s/or :map (s/keys :opt-un [::api ::output ::list-format])
                            :nil nil?))
 
-(s/def ::output #(some #{%} [:json :camunda-json :list]))
+(s/def ::output #(some #{%} [:pretty-json :json :camunda-json :list]))
 
 (s/def ::api (s/and ::protocol ::engine-rest))
 

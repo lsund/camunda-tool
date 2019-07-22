@@ -16,7 +16,9 @@
       (println (str "===" (make-space 3 maxlen) "====="))
       (doseq [[k v] data]
         (println (str k (make-space (count k) maxlen) v))))
-    (print data)))
+    (do
+      (print data)
+      (flush))))
 
 (defmethod pprint-json "list" [_ {:keys [output]} data]
   (if (= output :list)
@@ -24,4 +26,6 @@
       (println (str (get inst "processDefinitionName") "\n"
                     "Id: " (get inst "id") "\n"
                     "Start: " (get inst "startTime") "\n")))
-    (print data)))
+    (do
+      (print data)
+      (flush))))

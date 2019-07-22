@@ -19,17 +19,19 @@
     xs
     (filter #(= (get % "processDefinitionKey") def) xs)))
 
-(defn- process-json [{:keys [output] :as options} data process-fn raw-process-fn]
-  (let [f (if (= output :camunda-json)
-            raw-process-fn
+(defn- process-json [{:keys [output-format] :as options} data process-fn raw-process-fn]
+  (let [f (case output-format
+            :camunda-json raw-process-fn
             process-fn)]
     (-> data
         cheshire/parse-string
         f
-        (cheshire/generate-string {:pretty true}))))
+        (cheshire/generate-string (case output-format
+                                    :pretty-json {:pretty true}
+                                    {})))))
 
 (defmethod request! :list [[_ definition]
-                           {:keys [api output history list-format historic?]
+                           {:keys [api history list-format historic?]
                             :as options}]
   (let [resp (->> "/history/process-instance"
                   (str api)
@@ -52,8 +54,7 @@
 (defmethod request! :hlist [commands options]
   (request! [:list] (assoc options :historic? true)))
 
-(defmethod request! :vars [[_ id]
-                           {:keys [api output] :as options}]
+(defmethod request! :vars [[_ id] {:keys [api] :as options}]
   (let [resp (->> (str "/process-instance/" id "/variables")
                   (str api)
                   client/get
@@ -70,8 +71,7 @@
        (map-kv (fn [k v] [(name k) {"value" (str v)
                                     "type" "String"}]))))
 
-(defmethod request! :start [[_ definition-key & args]
-                            {:keys [api output] :as options}]
+(defmethod request! :start [[_ definition-key & args] {:keys [api] :as options}]
 
   (let [resp (->> (str "/process-definition/key/" definition-key "/start")
                   (str api)

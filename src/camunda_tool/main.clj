@@ -13,16 +13,17 @@
     "--api API_ENDPOINT"
     "API endpoint to use"]
    ["-o"
-    "--output OUTPUT_TYPE"
-    "Output type. Can be one of json | camunda-json | list"]])
+    "--output-format OUTPUT_FORMAT"
+    "Output format. Valid values : pretty-json | json | camunda-json | list"]])
 
 (defn- merge-defaults [options]
   (merge {:api "http://localhost:8080/engine-rest"
-          :output :json
-          :historic? false} options))
+          :output-format :json
+          :historic? false}
+         options))
 
 (defn- keywordize [options]
-  (update options :output keyword))
+  (update options :output-format keyword))
 
 (defn -main [& args]
   (let [[commands unparsed-options] (split-with #(not= (first %) \-) args)]
