@@ -1,7 +1,11 @@
 # Camunda Tool
 
-A command line utility for using Camunda BPM. Is esentailly a wrapper around the Camunda REST API, allowing you easy access to the functionality you need while working with Camunda. Call the `shell/install` script to build and install:
+A command line utility for using Camunda BPM. It is essentially a wrapper
+around the [Camunda REST
+API](https://docs.camunda.org/manual/7.11/reference/rest/), allowing convenient
+access to the most important functionality when developing with Camunda.
 
+To build and install, call the `shell/install` script:
 ```
 # Builds the program and copies an executable it into $HOME/.local/bin
 $ ./shell/install
