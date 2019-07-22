@@ -18,26 +18,20 @@
    ["-p"
     "--pretty"
     "Pretty print output"]
-   ["-o"
-    "--output-format OUTPUT_FORMAT"
-    "Output format. Valid values : json | list"]])
+   ["-l"
+    "--list-view"
+    "Output a human readable list instead of JSON"]])
 
 (defn- merge-defaults [options]
   (merge {:api "http://localhost:8080/engine-rest"
-          :output-format :json
           :historic? false}
          options))
-
-(defn- keywordize [options]
-  (update options :output-format keyword))
 
 (defn -main [& args]
   (let [[commands unparsed-options] (split-with #(not= (first %) \-) args)]
     (let [{:keys [options errors]} (cli/parse-opts unparsed-options
                                                    opt-spec)
-          options (-> options
-                      merge-defaults
-                      keywordize)]
+          options (-> options merge-defaults)]
       (s/check-asserts true)
       (s/assert :camunda-tool.specs/command-list commands)
       (s/assert :camunda-tool.specs/options-map options)

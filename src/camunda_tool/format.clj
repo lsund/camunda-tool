@@ -8,8 +8,8 @@
 (defn make-space [len maxlen]
   (apply str (take (- (+ maxlen 1) len) (repeat " "))))
 
-(defmethod pprint-json "vars" [_ {:keys [output-format]} data]
-  (if (= output-format :list)
+(defmethod pprint-json "vars" [_ {:keys [list-view]} data]
+  (if list-view
     (let [data (cheshire/parse-string data)
           maxlen (->> data (map-keys count) keys (apply max))]
       (println (str "KEY" (make-space 3 maxlen) "VALUE"))
@@ -20,8 +20,8 @@
       (print data)
       (flush))))
 
-(defmethod pprint-json "list" [_ {:keys [output-format]} data]
-  (if (= output-format :list)
+(defmethod pprint-json "list" [_ {:keys [list-view]} data]
+  (if list-view
     (doseq [inst (cheshire/parse-string data)]
       (println (str (get inst "processDefinitionName") "\n"
                     "Id: " (get inst "id") "\n"

@@ -6,12 +6,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Options
 
-(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::output-format ::pretty])
+(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::list-view ::pretty ::no-filter])
                            :nil nil?))
+
+(s/def ::list-view boolean?)
 
 (s/def ::pretty boolean?)
 
-(s/def ::output-format #(some #{%} [:json :list]))
+(s/def ::no-filter boolean?)
 
 (s/def ::api (s/and ::protocol ::engine-rest))
 
