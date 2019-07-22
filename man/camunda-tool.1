@@ -26,22 +26,33 @@ expects all commands before any options are given
 
 Valid commands are:
 
-.IP "list <definition>"
-lists all currently running process instances of the given definition
+.IP list
+.RI [ DEFINITION_KEY ]
+list all currently running process instances of the given definition. If
+.I DEFINITION_KEY
+is omitted, list all running process instances.
 
-.IP "hlist <definition>"
-lists all process instances of the given definition
+.IP hlist
+.RI [ DEFINITION_KEY ]
+list all process instances of the given definition. If
+.I DEFINITION_KEY
+is omitted, list all process instances.
 
-.IP "vars <process-id>"
+.IP vars
+.I PROCESS_ID
 list the variables of the given process ID.
 
-.IP "start definition variables"
-starts an instance of the latest process definition with the given definition key
-given start variables.
+.IP start
+.I DEFINITION_KEY VARIABLES...
+starts an instance of the latest process definition with the given definition
+key given start variables. The start variables are given as a space separated
+list "k0 v0 k1 v1 k2 v2..." of key-value pairs. All variables gets type string.
 
-.IP "monitor <process-id>"
+.IP "monitor PROCESS_ID"
+TODO
 
-.IP "input-vars <definition>"
+.IP "input-vars DEFINITION_KEY"
+TODO
 
 .SH OPTIONS
 
@@ -49,14 +60,31 @@ Options begin with one or two dashes.
 
 Valid options are:
 
-.IP "-r, --raw"
-Return the raw JSON from the Camunda rest API
+.IP "\-a \fIAPI\fR, --api \fIAPI\fR"
+Specify the REST API endpoint to use. If omitted,
+http://localhost:8080/engine-rest is used as default value.
+
+.IP "-o \fIOUTPUT_FORMAT\fR, --output-format \fIOUTPUT_FORMAT\fR"
+Specify the output format. Can take one of the following values:
+
+\fIjson\fR: output compact JSON (Default)
+
+\fIpretty-json\fR: output pretty-printed json
+
+\fIcamunda-json\fR: output the unmodified JSON response body from the REST rest
+call.
+
+\fIlist\fR: output a list view of the JSON response.
 
 .SH EXAMPLES
 
 .IP "List all active process instances"
 
 \fB$\fR camunda-tool list
+
+.IP "Start an instance of the latest definition of 'invoice' with variables foo=bar and baz=qux"
+
+\fB$\fR camunda-tool start invoice foo bar baz qux
 
 .IP "Since the program always return JSON, it is easily adaptable to \fBjq\fR"
 

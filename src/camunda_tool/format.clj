@@ -29,3 +29,6 @@
     (do
       (print data)
       (flush))))
+
+(defmethod pprint-json "hlist" [commands options data]
+  (pprint-json (conj (rest commands) "list") options data))
