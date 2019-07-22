@@ -1,4 +1,4 @@
-(defproject camunda-tool "0.1.0-SNAPSHOT"
+(defproject camunda-tool "1.0.0"
   :description "See README.md"
   :url "https://github.com/lsund/camunda-tool"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
