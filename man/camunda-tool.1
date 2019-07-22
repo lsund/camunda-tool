@@ -69,12 +69,13 @@ Specify the output format. Can take one of the following values:
 
 \fIjson\fR: output compact JSON (Default)
 
-\fIpretty-json\fR: output pretty-printed json
-
-\fIcamunda-json\fR: output the unmodified JSON response body from the REST rest
-call.
-
 \fIlist\fR: output a list view of the JSON response.
+
+.IP "-p, --pretty"
+Pretty print the output
+
+.IP "-n, --no-filter"
+Do not filter the raw JSON response from Camunda.
 
 .SH EXAMPLES
 

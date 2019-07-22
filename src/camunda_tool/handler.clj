@@ -19,16 +19,12 @@
     xs
     (filter #(= (get % "processDefinitionKey") def) xs)))
 
-(defn- process-json [{:keys [output-format] :as options} data process-fn raw-process-fn]
-  (let [f (case output-format
-            :camunda-json raw-process-fn
-            process-fn)]
+(defn- process-json [{:keys [output-format pretty no-filter] :as options} data process-fn raw-process-fn]
+  (let [f (if no-filter raw-process-fn process-fn)]
     (-> data
         cheshire/parse-string
         f
-        (cheshire/generate-string (case output-format
-                                    :pretty-json {:pretty true}
-                                    {})))))
+        (cheshire/generate-string (if pretty {:pretty true} {})))))
 
 (defmethod request! :list [[_ definition]
                            {:keys [api history list-format historic?]

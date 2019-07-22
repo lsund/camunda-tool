@@ -12,9 +12,15 @@
   [["-a"
     "--api API_ENDPOINT"
     "API endpoint to use"]
+   ["-n"
+    "--no-filter"
+    "Return the original camunda json response"]
+   ["-p"
+    "--pretty"
+    "Pretty print output"]
    ["-o"
     "--output-format OUTPUT_FORMAT"
-    "Output format. Valid values : pretty-json | json | camunda-json | list"]])
+    "Output format. Valid values : json | list"]])
 
 (defn- merge-defaults [options]
   (merge {:api "http://localhost:8080/engine-rest"

@@ -6,7 +6,8 @@ convenient interface to some of the most important queries.
 
 To build and install, call the `shell/install` script:
 ```
-# Builds the program and copies an executable it into $HOME/.local/bin
+# Builds the program and copies an executable it into $HOME/.local/bin.
+# Requires `lein`
 $ ./shell/install
 # Run the camunda-tool or add it to your path
 $ $HOME/.local/bin/camunda-tool list

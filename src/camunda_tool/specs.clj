@@ -6,10 +6,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Options
 
-(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::output ::list-format])
+(s/def ::options-map (s/or :map (s/keys :opt-un [::api ::output-format ::pretty])
                            :nil nil?))
 
-(s/def ::output #(some #{%} [:pretty-json :json :camunda-json :list]))
+(s/def ::pretty boolean?)
+
+(s/def ::output-format #(some #{%} [:json :list]))
 
 (s/def ::api (s/and ::protocol ::engine-rest))
 
@@ -17,8 +19,6 @@
                         :string #(string/starts-with? % "https://")))
 
 (s/def ::engine-rest (fn [[ _ x]] (re-find #"engine-rest" x)))
-
-(s/def ::list-format boolean?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Commands
