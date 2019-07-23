@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [camunda-tool.handler :as handler]
             [camunda-tool.format :refer [pprint-json]]
+            [cheshire.core :as cheshire]
             camunda-tool.specs
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
@@ -39,6 +40,6 @@
       (s/assert :camunda-tool.specs/command-list commands)
       (s/assert :camunda-tool.specs/options-map options)
       (if-not errors
-        (pprint-json commands options (handler/request! commands options))
+        (camunda-tool.handler/post-process  commands options (handler/request! commands options))
         (throw+ {:type ::cli-parsing-error}
                 (string/join "\n" errors))))))

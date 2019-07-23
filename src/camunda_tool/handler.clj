@@ -1,10 +1,11 @@
 (ns camunda-tool.handler
   (:require [cheshire.core :as cheshire]
             [me.lsund.util :refer [const flip]]
+            [camunda-tool.format :refer [pprint-json]]
             [medley.core :refer [map-kv map-vals map-keys]]
             [clj-http.client :as client]
             [clojure.pprint :refer [pprint]]
-            [slingshot.slingshot :refer [try+]]))
+            [slingshot.slingshot :refer [try+ throw+]]))
 
 (defmulti request!
   (comp keyword first const))
@@ -74,29 +75,49 @@
        cheshire/parse-string
        (map #(select-keys % ["workerId" "errorMessage" "activityId"]))))
 
+(defn- current-activities-for [id {:keys [api]}]
+  (let [resp (-> (str api "/process-instance/" id "/activity-instances")
+                 client/get
+                 :body
+                 (cheshire/parse-string)
+                 (get "childActivityInstances"))]
+    (map (comp #(map-keys keyword %) #(select-keys % ["id" "name" "activityType"])) resp)))
+
+(defn- activity->str [activity]
+  (str (get activity "activityType") " : " (get activity "name")))
+
+(defn post-process [commands {:keys [monitor] :as options} response]
+  (pprint-json commands options response)
+  (when monitor
+    (let [current-activity-id (atom nil)
+          process-instance-id (-> (get (cheshire/parse-string response) "id"))]
+      (println "Starting to monitor" process-instance-id)
+      (try+
+       (while true
+         (let [{:keys [id name activityType] :as activity} (first (current-activities-for
+                                                                   process-instance-id
+                                                                   options))
+               external-task (first (current-external-tasks-for process-instance-id options))]
+           (when-let [errors (get external-task "errorMessage")]
+             (throw+ {:errors true
+                      :errorspec errors}))
+           (when (and id (not= @current-activity-id id))
+             (reset! current-activity-id id)
+             (println (str activityType " : " name)))
+           (Thread/sleep 300)))
+
+       (catch [:status 404] {}
+         (println "Process instance terminated normally"))
+       (catch [:errors true] {:keys [errorspec]}
+         (println (str "Process instance failed with: " errorspec)))))))
+
 (defmethod request! :start [[_ definition-key & args] {:keys [api monitor] :as options}]
-  (let [resp (->> (str "/process-definition/key/" definition-key "/start")
-                  (str api)
-                  (flip client/post
-                        {:form-params {:variables (cli->camunda-variables args)}
-                         :content-type :json})
-                  :body)]
-    ;; TODO should pprint the start message before monitoring finishes
-    (let [out (process-json options resp #(select-keys % ["id"]) identity)
-          id (-> (get (cheshire/parse-string out) "id"))
-          errors (atom nil)]
-      (when monitor
-        (do
-          (while (not @errors)
-            (let [tasks (current-external-tasks-for id options)]
-              (reset! errors (some #(get % "errorMessage") tasks))
-              (println "Executing activity: " (map #(get % "activityId") tasks))
-              (Thread/sleep 2000)))
-          (if @errors
-            (println (str "Process instance failed with: " @errors))
-            (println "Process instance ended normally"))
-          out)
-        out))))
+  (->> (str "/process-definition/key/" definition-key "/start")
+       (str api)
+       (flip client/post
+             {:form-params {:variables (cli->camunda-variables args)}
+              :content-type :json})
+       :body))
 
 (defmethod request! :delete [[_ id] {:keys [api]}]
   (try+
